@@ -115,6 +115,7 @@ function renderClientType({ queryType, mutationType, subscriptionType }) {
         chain: {
             ${chainTypeContent}
         }
+        options: ClientOptions
     }
     `
 } // TODO add the close method that closes the ws client

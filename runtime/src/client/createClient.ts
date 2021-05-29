@@ -6,7 +6,7 @@ import {
 import ws from 'ws'
 import { Observable } from 'zen-observable-ts'
 import { ClientError } from '../error'
-import { BatchOptions, createFetcher } from '../fetcher'
+import { BatchOptions, createFetcher, Fetcher } from '../fetcher'
 import { ExecutionResult, LinkedType } from '../types'
 import { chain } from './chain'
 import {
@@ -40,8 +40,8 @@ export const createClient = ({
     queryRoot?: LinkedType
     mutationRoot?: LinkedType
     subscriptionRoot?: LinkedType
+    options: ClientOptions
 }) => {
-    const fetcher = createFetcher(options)
     const client: {
         wsClient?: WsSubscriptionClient
         query?: Function
@@ -51,13 +51,18 @@ export const createClient = ({
             query?: Function
             mutation?: Function
             subscription?: Function
-        }
-    } = {}
+        },
+        options: ClientOptions
+    } = {
+        options,
+    }
+    let fetcher: Fetcher
+
 
     if (queryRoot) {
         client.query = (request) => {
             if (!queryRoot) throw new Error('queryRoot argument is missing')
-
+            fetcher = createFetcher(client.options)
             const resultPromise = fetcher(
                 generateGraphqlOperation('query', queryRoot, request),
             )
@@ -69,7 +74,7 @@ export const createClient = ({
         client.mutation = (request) => {
             if (!mutationRoot)
                 throw new Error('mutationRoot argument is missing')
-
+            fetcher = createFetcher(client.options)
             const resultPromise = fetcher(
                 generateGraphqlOperation('mutation', mutationRoot, request),
             )
